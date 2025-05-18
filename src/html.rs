@@ -1,8 +1,9 @@
 use opener::open;
 use prettytable::{Cell, Row, Table};
-use std::fs::write;
+use std::fs::{self, write};
 use crate::pathing;
 
+// Creates html table of files & folders in search path
 pub fn create_table(search_path: &pathing::SearchPath) {
     let mut table = Table::new();
 
@@ -25,42 +26,12 @@ pub fn create_table(search_path: &pathing::SearchPath) {
 
     let mut buffer = Vec::new();
     table.print_html(&mut buffer).expect("Failed to write HTML");
+    let html_table = String::from_utf8(buffer).unwrap();
 
-    let styled_html = format!(
-        r#"
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Directory Listing</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {{
-            padding: 20px;
-        }}
-        h1 {{
-            margin-bottom: 20px;
-            color: #333;
-        }}
-        .table-responsive {{
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Directory Contents</h1>
-        <div class="table-responsive">
-            {}
-        </div>
-    </div>
-</body>
-</html>"#,
-        String::from_utf8(buffer).unwrap()
-    );
+    let template = fs::read_to_string("src/template/table.html").expect("Failed to load in template");
+    let styled_html = template.replace("<!-- TABLE_PLACEHOLDER -->", &html_table); 
 
-    write("table.html", styled_html).expect("Failed to write file");
-    open("table.html").expect("Failed to open in browser");
+
+    write("test_table.html", styled_html).expect("Failed to write file");
+    open("test_table.html").expect("Failed to open in browser");
 }
